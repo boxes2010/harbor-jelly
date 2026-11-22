@@ -1,0 +1,562 @@
+/* Colours are the tokens of src/style.ts, set as --c-<name> by ui.ts. */
+:root {
+  --font: 'M PLUS Rounded 1c', ui-rounded, 'Arial Rounded MT Bold', system-ui, sans-serif;
+  --line: color-mix(in srgb, var(--c-ink) 13%, transparent);
+  --shade: color-mix(in srgb, var(--c-ink) 18%, transparent);
+  --well: color-mix(in srgb, var(--c-ink) 11%, transparent);
+  --tray-h: 120px;
+}
+
+html, body { margin: 0; height: 100%; overflow: hidden; background: var(--c-paper); }
+body {
+  font: 500 11.5px/1.3 var(--font); color: var(--c-ink);
+  -webkit-font-smoothing: antialiased; user-select: none;
+}
+canvas { display: block; width: 100vw; height: 100vh; }
+button { font: inherit; color: inherit; cursor: pointer; }
+svg { display: block; width: 100%; height: 100%; }
+[hidden] { display: none !important; }
+:focus-visible { outline: 2.5px solid var(--c-blueprint); outline-offset: 2px; }
+
+/* Plates: flat enamel pieces that sit over the world. */
+#title, .chip, #event {
+  background: var(--c-enamel);
+  box-shadow: 0 0 0 1.5px var(--line), 0 4px 10px var(--shade);
+}
+#title {
+  position: fixed; left: 10px; top: 8px; padding: 5px 12px 6px; border-radius: 12px;
+  -webkit-app-region: drag;
+  font: italic 20px/1.1 'Iowan Old Style', 'Palatino', Georgia, serif;
+}
+#title small {
+  display: block; font: 700 8px/1.6 var(--font); letter-spacing: 0.18em; color: var(--c-inkSoft);
+}
+
+/* Buttons are the only pieces with a lip: they are the things you press. */
+.btn {
+  position: relative; display: inline-flex; align-items: center; justify-content: center; gap: 5px;
+  height: 23px; padding: 0 12px; border: 0; border-radius: 9px;
+  background: var(--face, var(--c-tile)); color: var(--c-ink);
+  font: 800 12px/1 var(--font); font-variant-numeric: tabular-nums; white-space: nowrap;
+  box-shadow: 0 0 0 1.5px var(--rim, var(--line)), 0 3px 0 0 var(--lip, var(--c-enamelEdge)), 0 3px 0 1.5px var(--rim, var(--line));
+  transition: transform 0.07s, box-shadow 0.07s, filter 0.12s;
+}
+.btn:hover { filter: brightness(1.05); }
+.btn:active { transform: translateY(3px); box-shadow: 0 0 0 1.5px var(--rim, var(--line)); }
+.btn.gold {
+  --face: var(--c-signalYellow); --lip: var(--c-coinEdge);
+  --rim: color-mix(in srgb, var(--c-coinEdge) 75%, var(--c-ink));
+}
+.btn.danger {
+  --face: var(--c-signalRed); --lip: color-mix(in srgb, var(--c-signalRed) 62%, var(--c-ink));
+  --rim: color-mix(in srgb, var(--c-signalRed) 50%, var(--c-ink)); color: var(--c-white);
+}
+.btn[aria-disabled='true'] {
+  cursor: default; filter: none; transform: translateY(2px);
+  background: var(--well); color: var(--c-inkSoft); box-shadow: inset 0 0 0 1.5px var(--line);
+}
+.btn svg { width: 11px; height: 11px; }
+.btn.nope { animation: nope 0.3s; }
+
+.coin {
+  flex: none; display: inline-block; width: 11px; height: 11px; border-radius: 50%;
+  background: radial-gradient(circle, var(--c-signalYellow) 0 36%, var(--c-amber) 40% 56%, var(--c-signalYellow) 60%);
+  box-shadow: 0 0 0 1.2px var(--c-coinEdge), 0 1.6px 0 1.2px var(--c-coinEdge);
+}
+
+/* Status, top right. */
+#hud { position: fixed; right: 10px; top: 8px; display: flex; align-items: center; gap: 6px; }
+.chip { display: flex; align-items: center; gap: 7px; height: 28px; padding: 0 11px; border-radius: 14px; }
+.chip .cap { font: 700 10.5px/1 var(--font); color: var(--c-inkSoft); }
+.chip b { font: 900 13px/1 var(--font); font-variant-numeric: tabular-nums; }
+.chip.warn { background: color-mix(in srgb, var(--c-signalRed) 16%, var(--c-enamel)); }
+.fleet { display: flex; gap: 3px; }
+.fleet i {
+  width: 15px; height: 8px; border-radius: 2px 7px 7px 2px / 2px 6px 6px 2px; background: var(--well);
+  transition: background 0.3s;
+}
+.fleet i.on { background: var(--c-navy); box-shadow: inset 0 -2.5px 0 var(--c-antifoul); }
+.meter { width: 46px; height: 8px; border-radius: 4px; background: var(--well); overflow: hidden; }
+.meter i { display: block; height: 100%; border-radius: 4px; background: var(--c-amber); transition: width 0.5s; }
+.warn .meter i { background: var(--c-signalRed); }
+.ring {
+  width: 16px; height: 16px; border-radius: 50%;
+  background: conic-gradient(var(--tone) var(--v), var(--well) 0);
+  -webkit-mask: radial-gradient(circle, transparent 4.4px, black 5px);
+  mask: radial-gradient(circle, transparent 4.4px, black 5px);
+}
+/* Port switcher: one plate with a segment for each port. The lamp is green, red for trouble, hollow for a port not owned. */
+.ports {
+  display: flex; gap: 2px; box-sizing: border-box; height: 28px; padding: 3px; border-radius: 14px;
+  background: var(--c-enamel); box-shadow: 0 0 0 1.5px var(--line), 0 4px 10px var(--shade);
+}
+.port {
+  display: flex; align-items: center; gap: 6px; padding: 0 10px; border: 0; border-radius: 11px;
+  background: none; color: var(--c-inkSoft); font: 800 11.5px/1 var(--font); white-space: nowrap;
+}
+.port:hover { background: var(--well); }
+.port.on { background: var(--c-ink); color: var(--c-white); }
+.mark { width: 7px; height: 7px; border-radius: 50%; background: var(--c-green); }
+.port.alarm .mark { background: var(--c-signalRed); --stage: var(--c-signalRed); animation: hot 1.2s ease-in-out infinite; }
+.port.more { padding: 0 7px; }
+.port.more svg { width: 11px; height: 11px; }
+/* View: a zoom button and a map of the port's length, with the stretch on screen marked. */
+#view { gap: 8px; padding: 0 10px 0 4px; }
+.zoom { width: 22px; height: 22px; padding: 5px; border: 0; border-radius: 50%; background: var(--well); }
+.zoom:hover { background: color-mix(in srgb, var(--c-ink) 20%, transparent); }
+.map { position: relative; width: 84px; height: 10px; border-radius: 5px; background: var(--well); cursor: ew-resize; }
+.map i {
+  position: absolute; top: 0; bottom: 0; box-sizing: border-box; border-radius: 5px;
+  background: var(--c-enamel); border: 2px solid var(--c-ink);
+}
+#cash { height: 36px; padding: 0 15px 0 10px; border-radius: 18px; gap: 8px; }
+#cash .coin { width: 17px; height: 17px; }
+#cash .sum { display: grid; justify-items: end; }
+#cash b { font-size: 19px; min-width: 3ch; text-align: right; }
+#rate { font: 800 9.5px/1 var(--font); font-variant-numeric: tabular-nums; color: var(--c-green); }
+#rate:empty { display: none; }
+#rate.down { color: var(--c-signalRed); }
+#cash.bump, #permits.bump, #run.bump { animation: bump 0.28s; }
+#cash.jackpot { animation: jackpot 0.55s; }
+#permits.spent, #crews.spent, #run.spent { animation: spent 0.4s; }
+/* The run of ships on time, and what it adds to the next bonus. */
+#run { gap: 5px; padding: 0 10px 0 7px; }
+#run small { font: 800 10.5px/1 var(--font); color: var(--c-green); }
+#run small:empty { display: none; }
+/* Permits and crews: the things besides cash that building can take. */
+.token { flex: none; width: 15px; height: 15px; }
+#permits, #crews { gap: 6px; padding: 0 10px 0 8px; }
+.stamps { display: flex; gap: 1.5px; }
+.stamps i { width: 4px; height: 10px; border-radius: 2px; background: var(--well); }
+.stamps i.on { background: var(--c-signalRed); }
+#cash.spent { animation: spent 0.4s; }
+
+/* The dock: three tabs that peek over the bottom edge, and the tray they pull up. */
+#dock {
+  position: fixed; left: 8px; right: 8px; bottom: 0; z-index: 5;
+  transform: translateY(var(--tray-h)); transition: transform 0.34s cubic-bezier(0.3, 1.25, 0.5, 1);
+}
+#dock.open { transform: none; }
+.tabrow { display: flex; align-items: flex-end; gap: 4px; height: 30px; padding: 0 12px; pointer-events: none; }
+.tabrow > * { pointer-events: auto; }
+.tab {
+  position: relative; height: 24px; padding: 0 15px; border: 1.5px solid var(--line); border-bottom: 0;
+  border-radius: 11px 11px 0 0; background: var(--c-enamelEdge);
+  font: 800 12px/22px var(--font); transition: height 0.12s, background 0.12s;
+}
+.tab:hover { height: 27px; }
+.tab.on { height: 30px; margin-bottom: -1.5px; z-index: 1; background: var(--c-enamel); }
+.tab .dot {
+  display: none; position: absolute; right: 4px; top: 4px; width: 6px; height: 6px; border-radius: 50%;
+  background: var(--c-signalYellow); box-shadow: 0 0 0 1.5px var(--c-coinEdge);
+}
+.tab.ping .dot { display: block; }
+#ribbon {
+  visibility: hidden; display: flex; align-items: center; gap: 9px; min-width: 0;
+  height: 25px; margin-left: auto; padding: 0 12px; border: 1.5px solid var(--line); border-bottom: 0;
+  border-radius: 11px 11px 0 0; background: var(--c-enamel); white-space: nowrap; overflow: hidden;
+}
+#dock.open #ribbon, #dock.open .x { visibility: visible; }
+#ribbon b { font-weight: 800; }
+#ribbon span { overflow: hidden; text-overflow: ellipsis; }
+#ribbon em { font-style: normal; font-weight: 800; color: var(--c-signalBlue); }
+#ribbon strong { font-weight: 800; color: var(--c-signalRed); }
+.lamp { flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--c-green); }
+.lamp.hint { background: var(--c-amber); }
+.lamp.trouble { background: var(--c-signalRed); }
+.where {
+  flex: none; padding: 0 7px; border-radius: 6px; background: var(--stage); color: var(--stage-ink);
+  font: 800 10px/16px var(--font);
+}
+.x {
+  visibility: hidden; flex: none; width: 25px; height: 25px; padding: 6px; border: 1.5px solid var(--line); border-bottom: 0;
+  border-radius: 11px 11px 0 0; background: var(--c-enamelEdge);
+}
+.x:hover { background: var(--c-enamel); }
+
+#tray {
+  box-sizing: border-box; height: var(--tray-h); padding: 4px 8px 0;
+  border: 1.5px solid var(--line); border-bottom: 0; border-radius: 15px 15px 0 0;
+  background: var(--c-enamel); box-shadow: 0 -8px 22px var(--shade);
+}
+#tray section { display: none; gap: 10px; height: 100%; box-sizing: border-box; padding: 4px 0 8px; overflow: auto hidden; scrollbar-width: none; }
+#tray section.on { display: flex; }
+.group { --stage: var(--c-slate); --stage-ink: var(--c-white); display: flex; flex: 0 1 auto; gap: 5px; min-width: 0; }
+.group.wide { flex: 1; }
+.spine {
+  flex: none; width: 17px; border-radius: 7px; background: var(--stage); color: var(--stage-ink);
+  writing-mode: vertical-rl; transform: rotate(180deg); text-align: center;
+  font: 800 10.5px/17px var(--font); letter-spacing: 0.03em;
+}
+.group.hot .spine { animation: hot 1.6s ease-in-out infinite; }
+
+/* Build cards: the picture is the card. Its level runs up the left edge, what it takes besides cash sits
+   on the picture, and its price is the button. The words are kept for the pointer and the info button. */
+.card {
+  position: relative; flex: 1 1 0; min-width: 98px; max-width: 132px; box-sizing: border-box;
+  display: grid; grid-template: 'pips icon' 50px 'name name' 13px 'buy buy' 23px / 5px minmax(0, 1fr);
+  gap: 2px 5px; padding: 4px 5px 6px; border-radius: 11px;
+  background: var(--c-tile); box-shadow: inset 0 0 0 1.5px var(--line);
+  transition: transform 0.16s cubic-bezier(0.3, 1.5, 0.5, 1), box-shadow 0.16s;
+}
+.card.focus { transform: translateY(-3px); box-shadow: inset 0 0 0 2px var(--c-blueprint), 0 6px 12px var(--shade); }
+.card.bought, .deal.bought, .who.bought { animation: bought 0.45s; }
+.icon { grid-area: icon; justify-self: center; width: 50px; height: 50px; }
+.name {
+  grid-area: name; text-align: center; font: 800 10.5px/13px var(--font); letter-spacing: -0.01em;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.pips { grid-area: pips; display: flex; flex-direction: column-reverse; gap: 2px; }
+.pips i { flex: 1; max-height: 10px; border-radius: 2.5px; background: var(--well); }
+.pips i.on { background: var(--stage); }
+.pips .gauge { max-height: none; background: linear-gradient(to top, var(--stage) var(--v), var(--well) 0); }
+.buy { grid-area: buy; align-self: start; width: 100%; height: 20px; padding: 0 4px; overflow: hidden; font-size: 11.5px; }
+/* While saving up, the price fills like a gauge. */
+.buy::before {
+  content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: var(--have, 0%);
+  background: color-mix(in srgb, var(--c-signalYellow) 55%, transparent); transition: width 0.3s;
+}
+.tag { position: relative; display: inline-flex; align-items: center; gap: 4px; }
+.info {
+  position: absolute; right: 4px; top: 4px; width: 15px; height: 15px; padding: 3px; border: 0; border-radius: 50%;
+  background: var(--well); color: var(--c-inkSoft);
+}
+.info:hover, .card.pinned .info { background: var(--c-ink); color: var(--c-white); }
+.needs { position: absolute; left: 15px; top: 4px; display: grid; gap: 1px; }
+.need { display: inline-flex; align-items: center; gap: 1px; font: 900 10px/1 var(--font); }
+.need svg { width: 13px; height: 13px; }
+.need.lacking { color: var(--c-signalRed); }
+.need.lacking svg { filter: drop-shadow(0 0 0 var(--c-signalRed)) drop-shadow(0 0 1.5px var(--c-signalRed)); }
+.card[data-state='max'] { background: none; }
+.card[data-state='max'] .icon { opacity: 0.6; }
+.card[data-state='locked'] .icon { opacity: 0.45; filter: saturate(0.3); }
+.card[data-state='max'] .btn { background: none; box-shadow: none; color: var(--c-green); }
+.btn.slim { padding: 0 6px; }
+
+/* A clicked thing's own tray: a line saying what it is, and only the cards that belong to it. */
+#context {
+  position: fixed; bottom: 0; z-index: 6; display: flex; flex-direction: column; align-items: flex-start;
+}
+#context.rise { animation: rise-in 0.3s cubic-bezier(0.3, 1.25, 0.5, 1); }
+.note {
+  display: flex; align-items: center; gap: 9px; height: 25px; padding: 0 4px 0 12px; white-space: nowrap;
+  border: 1.5px solid var(--line); border-bottom: 0; border-radius: 11px 11px 0 0; background: var(--c-enamel);
+}
+.say { display: flex; align-items: center; gap: 9px; }
+.say b { font-weight: 800; }
+.say em { font-style: normal; font-weight: 800; color: var(--c-signalBlue); }
+.say strong { font-weight: 800; color: var(--c-signalRed); }
+.note .x { visibility: visible; width: 21px; height: 21px; padding: 5px; border: 0; border-radius: 50%; background: var(--well); }
+.cards {
+  box-sizing: border-box; display: flex; gap: 5px; height: var(--tray-h); padding: 8px 8px 0; margin-top: -1.5px;
+  border: 1.5px solid var(--line); border-bottom: 0; border-radius: 0 15px 0 0; background: var(--c-enamel);
+  box-shadow: 0 -8px 22px var(--shade);
+}
+.cards .card { flex: none; width: 108px; height: 101px; }
+/* How a berth is run: small switches beside its cards. */
+.rules {
+  box-sizing: border-box; height: 101px; display: grid; align-content: space-between; padding: 6px 4px 8px 8px;
+  border-left: 1.5px solid var(--line);
+}
+.rules.bought { animation: bought 0.45s; }
+.rule { display: flex; align-items: center; gap: 5px; white-space: nowrap; }
+.rule .cap { width: 74px; font: 700 10.5px/1 var(--font); color: var(--c-inkSoft); }
+.rule .btn { height: 19px; padding: 0 9px; font-size: 11px; }
+.rules .pick { height: 20px; }
+.rule .btn .coin { width: 9px; height: 9px; }
+.pick {
+  display: inline-flex; align-items: center; gap: 5px; height: 22px; padding: 0 9px 0 7px; border: 0; border-radius: 8px;
+  background: var(--c-tile); box-shadow: inset 0 0 0 1.5px var(--line); font: 800 11px/1 var(--font); white-space: nowrap;
+}
+.pick:hover { background: var(--well); }
+.pick i { width: 8px; height: 8px; border-radius: 50%; box-shadow: 0 0 0 1.2px var(--c-tile); }
+.pick svg { width: 13px; height: 13px; }
+.pick small { font: 800 9.5px/1 var(--font); color: var(--c-inkSoft); }
+.pick small:empty { display: none; }
+.pick small::before { content: 'at '; font-weight: 700; }
+.pick[aria-pressed='true'] { background: var(--c-ink); color: var(--c-white); box-shadow: none; }
+.pick.icon-only { padding: 0 5px; }
+.pick.icon-only svg { width: 19px; height: 19px; }
+.pick[aria-disabled='true'] { opacity: 0.45; }
+.rule .vessel { font: 800 11px/1 var(--font); }
+/* A ship of the player's own, drawn up at a shipyard: what she is, her holds and livery, her name and price. */
+.rules.own .cap { width: 52px; }
+.pick.swatch { padding: 0 5px; }
+.pick.swatch i { width: 11px; height: 11px; border-radius: 4px; box-shadow: none; }
+.pick.swatch[aria-pressed='true'] { background: var(--c-tile); box-shadow: inset 0 0 0 2px var(--c-ink); }
+.naming {
+  box-sizing: border-box; width: 132px; height: 20px; padding: 0 8px; border: 0; border-radius: 8px; outline: 0;
+  background: var(--c-tile); box-shadow: inset 0 0 0 1.5px var(--line); color: var(--c-ink);
+  font: 800 11px/1 var(--font); text-transform: uppercase; letter-spacing: 0.04em;
+}
+.naming:focus { box-shadow: inset 0 0 0 2px var(--c-blueprint); }
+.naming::placeholder { color: var(--c-inkSoft); opacity: 0.7; }
+/* The fleet: the player's own ships, each with where she is and the two ends of her trade. */
+.hulls { display: flex; gap: 5px; }
+#tray section[data-tab='ships'] .group { flex: none; }
+.deal.own { width: 190px; }
+.deal.own .lies { font-weight: 800; color: var(--c-signalBlue); }
+.deal.own[data-state='active'] .lies { color: var(--c-green); }
+.deal.own .figs { gap: 6px; }
+.deal.own .sum { margin-left: auto; }
+.deal.own .act .pick { height: 19px; padding: 0 7px; font-size: 10.5px; }
+.deal.own .act .btn.slim { margin-left: auto; }
+.rule .bar { width: 90px; }
+.rule .bar i { background: var(--c-signalBlue); }
+/* The name of whatever is under the pointer. */
+#tip {
+  position: fixed; left: 0; top: 0; z-index: 7; display: flex; gap: 7px; padding: 4px 10px; border-radius: 10px;
+  background: var(--c-ink); color: var(--c-white); font: 500 11px/1.3 var(--font); white-space: nowrap; pointer-events: none;
+}
+#tip b { font-weight: 800; }
+@keyframes rise-in { from { transform: translateY(40px); opacity: 0; } }
+
+/* Ships. A card is the ship's side, as long as the ship, with what she carries beside it; under that what she
+   pays a box and as a bonus, and the buttons. The rest is said when the pointer is on it. */
+.deal {
+  flex: none; width: 182px; box-sizing: border-box; display: grid; grid-template-rows: 44px 16px 22px; gap: 5px;
+  padding: 5px 7px 5px; border-radius: 11px; background: var(--c-tile); box-shadow: inset 0 0 0 1.5px var(--line);
+}
+.plate { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+.hullplate {
+  flex: none; box-sizing: border-box; width: var(--len); height: 44px; padding: 6px 18px 0 9px; overflow: hidden;
+  border-radius: 7px 20px 24px 7px / 7px 13px 26px 7px;
+  background: linear-gradient(to top, var(--c-antifoul) 7px, var(--hull) 7px); color: var(--c-white);
+}
+.hullplate b {
+  font: 900 9px/1.25 var(--font); letter-spacing: 0.1em; text-transform: uppercase;
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden;
+}
+.hullplate span { display: block; font: 500 9px/1.2 var(--font); opacity: 0.85; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cargo { flex: none; width: 26px; height: 26px; box-sizing: border-box; padding: 3px; border-radius: 8px; background: var(--well); }
+.figs { display: flex; align-items: center; gap: 9px; font: 900 11.5px/1 var(--font); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.fig { display: inline-flex; align-items: center; gap: 3px; }
+.fig svg { width: 12px; height: 12px; }
+.fig .coin { width: 9px; height: 9px; }
+.fig.next { margin-left: auto; font-weight: 800; color: var(--c-green); }
+.act { display: flex; align-items: flex-start; gap: 5px; }
+.act .btn { height: 19px; margin-left: auto; padding: 0 10px; font-size: 11px; }
+.act .btn.slim { margin-left: 0; padding: 0 5px; }
+.act .btn.slim + .btn { margin-left: 0; }
+.sail { display: inline-flex; align-items: center; gap: 3px; height: 19px; }
+.step { width: 17px; height: 17px; padding: 3.5px; border: 0; border-radius: 50%; background: var(--well); }
+.step:hover { background: color-mix(in srgb, var(--c-ink) 22%, transparent); }
+.step.nope { animation: nope 0.3s; }
+.boats { display: inline-flex; gap: 1px; }
+.boats svg { width: 13px; height: 13px; color: color-mix(in srgb, var(--c-ink) 16%, transparent); }
+.boats svg.on { color: var(--c-navy); }
+.deal[data-state='active'] { box-shadow: inset 0 0 0 2px var(--c-green); }
+.deal[data-state='locked'] .plate { filter: saturate(0.35); opacity: 0.6; }
+.deal[data-state='open'][data-fit='over'] .act .btn { --rim: var(--c-signalRed); }
+.lines { flex: none; }
+.asks { display: flex; align-items: center; gap: 5px; min-width: 60px; }
+.deal.ask { width: 168px; }
+.deal.ask[data-fit='tight'] { box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--c-signalRed) 55%, transparent); }
+.deal.ask .act { align-items: center; }
+.deal.ask .fuse { flex: 1; height: 5px; margin: 0 2px 3px 0; }
+.nobody { width: 34px; height: 34px; margin: 0 13px; color: color-mix(in srgb, var(--c-ink) 14%, transparent); }
+
+/* Crew. On the left whoever is picked out: grade by the colour of the hat, a skill in each trade, time served
+   towards the next grade, pay, and what can be done. On the right everyone at their posts. */
+.who {
+  position: sticky; left: 0; z-index: 2; flex: none; width: 366px; box-sizing: border-box; display: grid;
+  align-content: space-between; padding: 4px 9px 6px; border-radius: 11px; background: var(--c-tile); box-shadow: inset 0 0 0 1.5px var(--line);
+}
+.who .row { display: flex; align-items: center; gap: 7px; min-width: 0; }
+.face { flex: none; width: 30px; height: 30px; }
+.called { flex: 1; min-width: 0; display: grid; }
+.called b { font: 800 12px/1.2 var(--font); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.called small { font: 700 9.5px/1.2 var(--font); color: var(--c-inkSoft); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.wage { font: 900 13px/1 var(--font); font-variant-numeric: tabular-nums; }
+.skills { display: flex; gap: 5px; }
+.skill { display: grid; grid-template-columns: 20px repeat(3, 6px); align-items: center; gap: 2px; padding: 1px 3px; border-radius: 6px; }
+.skill svg { width: 20px; height: 20px; }
+.skill i, .stars i { height: 4px; border-radius: 2px; background: var(--well); }
+.skill i.on, .stars i.on { background: var(--c-amber); }
+.skill.mine { background: var(--well); }
+.exp { flex: 1; min-width: 20px; height: 7px; border-radius: 4px; background: var(--well); overflow: hidden; }
+.exp i { display: block; height: 100%; border-radius: 4px; background: var(--c-signalBlue); transition: width 0.5s; }
+.pays { display: flex; gap: 3px; margin-right: auto; }
+.paid {
+  display: inline-flex; align-items: center; justify-content: center; gap: 1px; height: 20px; padding: 0 6px; border: 0;
+  border-radius: 8px; background: var(--c-enamel); box-shadow: inset 0 0 0 1.5px var(--line);
+}
+.paid .coin { width: 8px; height: 8px; box-shadow: 0 0 0 1px var(--c-coinEdge); }
+.paid:hover { background: var(--well); }
+.paid[aria-pressed='true'] { background: var(--c-ink); box-shadow: none; }
+.who .btn { height: 20px; padding: 0 8px; font-size: 11px; }
+.who .btn[aria-pressed='true'] { --face: var(--c-ink); color: var(--c-white); }
+.who[data-kind='none'] .skills, .who[data-kind='none'] .row:last-child { visibility: hidden; }
+.who[data-kind='asking'] :is(.pays, [data-do=promote], [data-do=swap]) { display: none; }
+.who[data-kind='hand'] [data-do=hire] { display: none; }
+.who[data-kind='asking'] [data-do=hire] { margin-left: auto; }
+.roster { display: flex; gap: 10px; }
+.roster .group { flex: none; }
+.tiles { display: grid; grid-auto-flow: column; grid-template-rows: repeat(2, 46px); gap: 4px; align-content: center; min-width: 38px; }
+.hand {
+  position: relative; width: 38px; height: 46px; padding: 0; border: 0; border-radius: 9px; display: grid;
+  justify-items: center; align-content: center; gap: 2px; background: var(--c-tile); box-shadow: inset 0 0 0 1.5px var(--line);
+}
+.hand svg { width: 26px; height: 26px; }
+.hand:hover { background: var(--well); }
+.stars { display: grid; grid-template-columns: repeat(3, 6px); gap: 2px; }
+.hand.on { box-shadow: inset 0 0 0 2.5px var(--c-ink); }
+.hand.asking, .hand.empty { background: none; box-shadow: none; outline: 1.5px dashed var(--c-inkSoft); outline-offset: -2px; }
+.hand.empty svg { width: 24px; height: 24px; opacity: 0.3; filter: saturate(0); }
+.hand.nope { animation: nope 0.3s; }
+.ready {
+  display: none; position: absolute; right: -3px; top: -3px; box-sizing: border-box; width: 14px; height: 14px; padding: 2.5px;
+  border-radius: 50%; background: var(--c-signalYellow); box-shadow: 0 0 0 1.2px var(--c-coinEdge);
+}
+.ready svg { width: 100%; height: 100%; }
+.hand.promotable .ready { display: block; }
+.swapping .hand:not(.on) { box-shadow: inset 0 0 0 2px var(--c-signalYellow); outline: none; }
+
+/* Port: where time is lost, the record so far, settings. */
+.delays { width: 300px; display: grid; grid-template-columns: 1fr 1fr; align-content: center; gap: 7px 16px; padding: 0 4px; }
+.delay { display: grid; grid-template-columns: 1fr 52px; align-items: center; gap: 8px; font-size: 11px; line-height: 1.1; white-space: nowrap; }
+.bar { height: 7px; border-radius: 4px; background: var(--well); overflow: hidden; }
+.bar i { display: block; height: 100%; min-width: 3px; border-radius: 4px; background: var(--c-inkSoft); transition: width 0.5s; }
+.delay.worst { font-weight: 800; }
+.delay.worst .bar i { background: var(--c-signalRed); }
+.tiles { flex: 1; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 5px; align-content: center; }
+.stat { padding: 5px 9px 6px; border-radius: 10px; background: var(--c-tile); box-shadow: inset 0 0 0 1.5px var(--line); overflow: hidden; }
+.stat b { display: block; font: 900 15px/1.15 var(--font); font-variant-numeric: tabular-nums; }
+.stat span { font: 700 9.5px/1.2 var(--font); color: var(--c-inkSoft); white-space: nowrap; }
+/* Harbours: a card for each, with its skyline. One the player runs is a way there; the one on screen is ringed. */
+.card.harbour { flex: 0 0 86px; min-width: 86px; }
+.card.harbour[data-state='max'] { background: var(--c-tile); }
+.card.harbour[data-state='max'] .icon { opacity: 1; }
+.card.harbour.here { box-shadow: inset 0 0 0 2px var(--c-ink); }
+.pair { display: flex; gap: 8px; padding-bottom: 3px; }
+.settings {
+  width: 270px; display: grid; grid-template-columns: 1fr 1fr; align-content: center; justify-items: start;
+  gap: 8px 14px; padding: 0 4px;
+}
+.switch { display: flex; align-items: center; gap: 9px; padding: 0; border: 0; background: none; text-align: left; }
+.switch i {
+  flex: none; position: relative; width: 34px; height: 19px; border-radius: 10px;
+  background: color-mix(in srgb, var(--c-ink) 24%, transparent); transition: background 0.15s;
+}
+.switch i::after {
+  content: ''; position: absolute; left: 2.5px; top: 2.5px; width: 14px; height: 14px; border-radius: 50%;
+  background: var(--c-tile); box-shadow: 0 1.5px 0 var(--shade); transition: transform 0.2s cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+.switch[aria-checked='true'] i { background: var(--c-green); }
+.switch[aria-checked='true'] i::after { transform: translateX(15px); }
+.switch b { display: block; font: 800 11.5px/1.2 var(--font); }
+
+/* Rare decisions. */
+#event {
+  position: fixed; left: 150px; top: 8px; z-index: 8; width: 470px; padding: 11px 14px 12px; border-radius: 16px;
+  animation: drop 0.5s cubic-bezier(0.3, 1.5, 0.5, 1);
+}
+#event small { display: block; margin-bottom: 1px; font: 800 10px/1.3 var(--font); color: var(--c-signalBlue); }
+#event h2 { margin: 0 0 2px; font: 900 15px/1.2 var(--font); }
+#event p { margin: 0 0 10px; line-height: 1.35; }
+.choices { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+.choice { height: auto; display: grid; justify-content: stretch; gap: 1px; padding: 6px 10px 7px; text-align: left; white-space: normal; }
+.choice b { font: 800 12px/1.25 var(--font); }
+.choice em {
+  margin-left: 6px; padding: 1px 6px; border-radius: 6px; background: var(--well);
+  font: 700 9.5px/1.4 var(--font); color: var(--c-inkSoft);
+}
+.choice span { font: 500 10.5px/1.3 var(--font); color: var(--c-inkSoft); }
+.fuse { height: 5px; margin-top: 12px; border-radius: 3px; background: var(--well); }
+.fuse i { display: block; height: 100%; border-radius: 3px; background: var(--c-signalRed); }
+
+#toast {
+  position: fixed; left: 50%; bottom: 10px; z-index: 9; transform: translateX(-50%);
+  padding: 6px 14px; border-radius: 14px; background: var(--c-ink); color: var(--c-white);
+  font-weight: 700; box-shadow: 0 4px 12px var(--shade); transition: bottom 0.3s;
+}
+.managing #toast { bottom: calc(var(--tray-h) + 38px); }
+
+/* Changing port: a sheet of paper crosses the view while the diorama under it is swapped. */
+#wipe {
+  position: fixed; inset: 0; transform: translateX(-105%); pointer-events: none;
+  background: var(--c-paper); box-shadow: 0 0 50px var(--shade);
+}
+#wipe.run { animation: wipe 0.6s cubic-bezier(0.65, 0, 0.35, 1); }
+@keyframes wipe {
+  0% { transform: translateX(105%); }
+  42%, 58% { transform: translateX(0); }
+  100% { transform: translateX(-105%); }
+}
+
+/* Money and building feedback, drawn over everything. */
+#fx { position: fixed; inset: 0; z-index: 20; overflow: hidden; pointer-events: none; }
+.coin.flying { position: absolute; left: -7px; top: -7px; width: 14px; height: 14px; will-change: transform; }
+.pop {
+  position: absolute; white-space: nowrap; text-align: center; font: 900 13px/1 var(--font); color: var(--c-ink);
+  -webkit-text-stroke: 3.5px var(--c-tile); paint-order: stroke fill;
+  animation: rise 1.15s cubic-bezier(0.2, 0.8, 0.3, 1) both;
+}
+.pop small { display: block; margin-top: 2px; font-size: 10.5px; -webkit-text-stroke-width: 3px; }
+.pop.bonus { font-size: 21px; -webkit-text-stroke-width: 5px; animation-duration: 2s; }
+.pop.bonus small { color: var(--c-green); }
+/* A big payout is written in gold and takes its time. */
+.pop.big { font-size: 28px; animation-duration: 2.7s; }
+.pop.huge { font-size: 36px; animation-duration: 3.3s; }
+.pop.big .sum, .pop.huge .sum {
+  color: var(--c-signalYellow); -webkit-text-stroke: 6px color-mix(in srgb, var(--c-coinEdge) 45%, var(--c-ink));
+}
+.pop.big small, .pop.huge small { font-size: 12px; -webkit-text-stroke-width: 4px; }
+.coin.flying.fat { left: -10px; top: -10px; width: 20px; height: 20px; }
+.burst.gold { width: 130px; height: 130px; margin: -65px; border: 5px solid var(--c-signalYellow); animation-duration: 0.8s; }
+.pop.late { font-size: 16px; color: var(--c-signalRed); animation-duration: 1.8s; }
+.pop.spend { font-size: 14px; color: var(--c-signalRed); animation-name: sink; }
+.pop.wage { font-size: 12px; color: var(--c-signalRed); animation-name: sink; }
+.seal.flying { position: absolute; left: -9px; top: -9px; width: 18px; height: 18px; will-change: transform; }
+.burst {
+  position: absolute; width: 64px; height: 64px; margin: -32px; border-radius: 50%;
+  border: 3px solid var(--c-blueprint); animation: burst 0.55s ease-out both;
+}
+
+.locator {
+  position: absolute; left: -31px; top: -31px; box-sizing: border-box; width: 62px; height: 62px; border-radius: 50%;
+  border: 5px solid color-mix(in srgb, var(--c-tile) 88%, transparent);
+}
+.locator::before {
+  content: ''; position: absolute; inset: -4px; border-radius: 50%; border: 3px dashed var(--c-blueprint);
+  animation: turn 7s linear infinite;
+}
+
+@keyframes turn { to { rotate: 1turn; } }
+@keyframes rise {
+  0% { opacity: 0; transform: translate(-50%, -20%) scale(0.6); }
+  14% { opacity: 1; transform: translate(-50%, -75%) scale(1.14); }
+  28% { transform: translate(-50%, -95%) scale(1); }
+  78% { opacity: 1; }
+  100% { opacity: 0; transform: translate(-50%, -210%) scale(1); }
+}
+@keyframes sink {
+  0% { opacity: 0; transform: translate(-50%, -90%) scale(0.7); }
+  16% { opacity: 1; transform: translate(-50%, -40%) scale(1.1); }
+  75% { opacity: 1; }
+  100% { opacity: 0; transform: translate(-50%, 40%) scale(1); }
+}
+@keyframes burst { from { opacity: 1; transform: scale(0.2); } to { opacity: 0; transform: scale(1.5); } }
+@keyframes bump { 40% { transform: scale(1.09); box-shadow: 0 0 0 2.5px var(--c-signalYellow), 0 4px 10px var(--shade); } }
+@keyframes jackpot {
+  25% { transform: scale(1.2); box-shadow: 0 0 0 4px var(--c-signalYellow), 0 6px 16px var(--shade); }
+  60% { transform: scale(1.06); box-shadow: 0 0 0 3px var(--c-signalYellow), 0 4px 10px var(--shade); }
+}
+@keyframes spent { 30% { transform: translateY(3px); background: color-mix(in srgb, var(--c-signalRed) 22%, var(--c-enamel)); } }
+@keyframes bought { 35% { transform: translateY(-3px) scale(1.04); background: color-mix(in srgb, var(--c-signalYellow) 38%, var(--c-tile)); } }
+@keyframes nope { 25% { translate: -3px 0; } 75% { translate: 3px 0; } }
+@keyframes hot { 50% { box-shadow: 0 0 0 3px color-mix(in srgb, var(--stage) 35%, transparent); } }
+@keyframes drop { from { opacity: 0; transform: translateY(-14px) scale(0.96); } }
+
+/* On a narrower screen the event card and the status row would meet in the middle. */
+@media (max-width: 1560px) {
+  #event { width: 372px; }
+  .map { width: 56px; }
+  .chip { padding: 0 9px; gap: 6px; }
+  .chip .cap { display: none; }
+  #local .cap { display: block; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}

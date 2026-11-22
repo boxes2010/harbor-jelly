@@ -1,0 +1,55 @@
+{
+  "name": "harbor-jelly",
+  "version": "0.0.1",
+  "private": true,
+  "main": "electron/main.cjs",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "start": "npm run build && electron .",
+    "shot": "npm run build && HARBOR_SHOT=shot.png HARBOR_QUERY=${HARBOR_QUERY:-fresh=1} electron .",
+    "test": "vitest run",
+    "dist": "npm run build && electron-builder"
+  },
+  "devDependencies": {
+    "@fontsource/m-plus-rounded-1c": "^5.3.0",
+    "@types/three": "^0.187.0",
+    "electron": "^45.3.0",
+    "electron-builder": "^26.18.0",
+    "three": "^0.187.0",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.7",
+    "vitest": "^5.1.0"
+  },
+  "type": "module",
+  "description": "A container port in a strip along the bottom of your screen.",
+  "author": "Harbor Jelly",
+  "build": {
+    "appId": "com.harborjelly.game",
+    "productName": "Harbor Jelly",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**",
+      "electron/**"
+    ],
+    "mac": {
+      "category": "public.app-category.simulation-games",
+      "target": [
+        "dmg"
+      ]
+    },
+    "win": {
+      "target": [
+        "nsis"
+      ]
+    },
+    "linux": {
+      "target": [
+        "AppImage"
+      ],
+      "category": "Game"
+    }
+  }
+}
